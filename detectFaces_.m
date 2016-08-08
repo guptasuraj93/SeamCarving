@@ -1,10 +1,21 @@
-function detectFaces_(image)
-	peopleDetector = vision.PeopleDetector('UprightPeople_96x48')
-I = imread('test3.jpg');
+function detectFaces_(imageName)
+	FDetect = vision.CascadeObjectDetector;
 
-[bboxes,scores] = step(peopleDetector,I);
+	%Read the input image
+	I = imread(imageName);
+	I = rgb2gray(I);
 
-I = insertObjectAnnotation(I,'rectangle',bboxes,scores);
-figure, imshow(I)
-title('Detected people and detection scores');
+	[mserRegions, mserConnComp] = detectMSERFeatures(I,'RegionAreaRange',[200 8000],'ThresholdDelta',4);
+	%Returns Bounding Box values based on number of objects
+	%BB = step(FDetect,I);
+
+	figure,
+	imshow(I); hold on
+	%for i = 1:size(BB,1)
+    	%rectangle('Position',BB(i,:),'LineWidth',2,'LineStyle','-','EdgeColor','r');
+    	%rectangle('Position',finalBoundingBoxes(i,1:4),'LineWidth',2,'LineStyle','-','EdgeColor','r');
+	%end
+	plot(mserRegions, 'showPixelList', true,'showEllipses',false);
+	title('Face Detection');
+	hold off;
 end
