@@ -1,6 +1,6 @@
 function [reducedImage, resizedImage1] = seamCarving_(ReducedSize, image)
     tic;
-    getEnergy = @getEnergy_;
+%    getEnergy = @getEnergy_;
     generateSeams = @generateSeams_;
     reduceImageVertical = @reduceImageVertical_;
     reduceImageHorizontal = @reduceImageHorizontal_;
@@ -8,10 +8,14 @@ function [reducedImage, resizedImage1] = seamCarving_(ReducedSize, image)
     getResizedImage = @getResizedImage_;
     deleteHorizontalSeamFromOriginalImage = @deleteHorizontalSeamFromOriginalImage_;
     deleteVerticalSeamFromOriginalImage = @deleteVerticalSeamFromOriginalImage_;
+    detectFaces = @detectFaces_;
+    getEnergyWithFaceMask = @getEnergyWithFaceMask_;
 
+    maskedImage = detectFaces(image);
 	originalImageSize = size(image);
 	sizeReduction = round([(originalImageSize(1)-ReducedSize(1))/2 (originalImageSize(2)-ReducedSize(2))/2]);
     resizedImage = getResizedImage(image);
+    maskedImage = getResizedImage(maskedImage);
     disp('creating tranportMatrix...');
 	[T, transBitMask] = findTransportMatrix(sizeReduction, resizedImage);
     disp('tranportMatrix created');
@@ -20,17 +24,21 @@ function [reducedImage, resizedImage1] = seamCarving_(ReducedSize, image)
 
     for it = 1 : (sizeReduction(1) + sizeReduction(2))
         if (transBitMask(i, j) == 0)
-        	energy = getEnergy(resizedImage,0);
+%       	energy = getEnergy(resizedImage,0);
+            energy = getEnergyWithFaceMask(resizedImage,maskedImage);
             [minSeamEnergy,optSeamMask] = generateSeams(energy');
             optSeamMaskTranspose = optSeamMask';   
             resizedImage = reduceImageHorizontal(resizedImage,optSeamMaskTranspose);
+            maskedImage = reduceImageHorizontal(maskedImage, optSeamMaskTranspose);
             image = deleteHorizontalSeamFromOriginalImage(image,optSeamMaskTranspose);
             i = i - 1;
             disp('Horizontal');
         else
-        	energy = getEnergy(resizedImage,1);
+%       	energy = getEnergy(resizedImage,1);
+            energy = getEnergyWithFaceMask(resizedImage,maskedImage);
             [minSeamEnergy,optSeamMask] = generateSeams(energy);
             resizedImage = reduceImageVertical(resizedImage,optSeamMask);
+            maskedImage = reduceImageVertical(maskedImage, optSeamMask);
             image = deleteVerticalSeamFromOriginalImage(image,optSeamMask);
             j = j - 1;
             disp('Vertical');
